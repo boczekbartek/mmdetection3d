@@ -109,8 +109,13 @@ class _NumPointsInGTCalculater:
         return info
 
     def calculate(self, infos):
-        ret_infos = mmengine.track_parallel_progress(self.calculate_single,
-                                                     infos, self.num_worker)
+        ret_infos = list()
+        for info in mmengine.track_iter_progress(infos):
+            o = self.calculate_single(info)
+            ret_infos.append(o)
+
+        # ret_infos = mmengine.track_parallel_progress(self.calculate_single,
+        #                                              infos, self.num_worker)
         for i, ret_info in enumerate(ret_infos):
             infos[i] = ret_info
 
@@ -259,6 +264,7 @@ def create_waymo_info_file(data_path,
         save_path = Path(data_path)
     else:
         save_path = Path(save_path)
+    print('Training', flush=True)
     waymo_infos_gatherer_trainval = WaymoInfoGatherer(
         data_path,
         training=True,
@@ -268,6 +274,7 @@ def create_waymo_info_file(data_path,
         relative_path=relative_path,
         max_sweeps=max_sweeps,
         num_worker=workers)
+    print('Validation', flush=True)
     waymo_infos_gatherer_test = WaymoInfoGatherer(
         data_path,
         training=False,
@@ -278,6 +285,7 @@ def create_waymo_info_file(data_path,
         relative_path=relative_path,
         max_sweeps=max_sweeps,
         num_worker=workers)
+    print('Num points', flush=True)
     num_points_in_gt_calculater = _NumPointsInGTCalculater(
         data_path,
         relative_path,
@@ -288,19 +296,19 @@ def create_waymo_info_file(data_path,
     waymo_infos_train = waymo_infos_gatherer_trainval.gather(train_img_ids)
     num_points_in_gt_calculater.calculate(waymo_infos_train)
     filename = save_path / f'{pkl_prefix}_infos_train.pkl'
-    print(f'Waymo info train file is saved to {filename}')
+    print(f'Waymo info train file is saved to {filename}', flush=True)
     mmengine.dump(waymo_infos_train, filename)
     waymo_infos_val = waymo_infos_gatherer_trainval.gather(val_img_ids)
     num_points_in_gt_calculater.calculate(waymo_infos_val)
     filename = save_path / f'{pkl_prefix}_infos_val.pkl'
-    print(f'Waymo info val file is saved to {filename}')
+    print(f'Waymo info val file is saved to {filename}', flush=True)
     mmengine.dump(waymo_infos_val, filename)
     filename = save_path / f'{pkl_prefix}_infos_trainval.pkl'
     print(f'Waymo info trainval file is saved to {filename}')
     mmengine.dump(waymo_infos_train + waymo_infos_val, filename)
     waymo_infos_test = waymo_infos_gatherer_test.gather(test_img_ids)
     filename = save_path / f'{pkl_prefix}_infos_test.pkl'
-    print(f'Waymo info test file is saved to {filename}')
+    print(f'Waymo info test file is saved to {filename}', flush=True)
     mmengine.dump(waymo_infos_test, filename)
 
 

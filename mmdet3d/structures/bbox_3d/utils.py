@@ -7,7 +7,7 @@ import torch
 from torch import Tensor
 
 from mmdet3d.utils import array_converter
-
+from concurrent.futures import ThreadPoolExecutor
 
 @array_converter(apply_to=('val', ))
 def limit_period(val: Union[np.ndarray, Tensor],
@@ -27,6 +27,8 @@ def limit_period(val: Union[np.ndarray, Tensor],
     limited_val = val - torch.floor(val / period + offset) * period
     return limited_val
 
+def einsum_(points, rot_mat_T):
+    return ThreadPoolExecutor().submit(torch.einsum, 'aij,jka->aik', points, rot_mat_T).result()
 
 @array_converter(apply_to=('points', 'angles'))
 def rotation_3d_in_axis(
@@ -110,7 +112,8 @@ def rotation_3d_in_axis(
     if points.shape[0] == 0:
         points_new = points
     else:
-        points_new = torch.einsum('aij,jka->aik', points, rot_mat_T)
+        # points_new = torch.einsum('aij,jka->aik', points, rot_mat_T)
+        points_new = einsum_(points, rot_mat_T)
 
     if batch_free:
         points_new = points_new.squeeze(0)

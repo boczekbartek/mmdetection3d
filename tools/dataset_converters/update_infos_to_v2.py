@@ -881,6 +881,7 @@ def update_waymo_infos(pkl_path, out_dir):
         'CAM_SIDE_LEFT',
         'CAM_SIDE_RIGHT',
     ]
+    ignore_class_name = set()
     print(f'{pkl_path} will be modified.')
     if out_dir in pkl_path:
         print(f'Warning, you may overwriting '
@@ -972,7 +973,6 @@ def update_waymo_infos(pkl_path, out_dir):
             temp_data_info['image_sweeps'].append(image_sweep)
 
         anns = ori_info_dict.get('annos', None)
-        ignore_class_name = set()
         if anns is not None:
             num_instances = len(anns['name'])
 
